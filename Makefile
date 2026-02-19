@@ -10,8 +10,8 @@ build:
 test: build test1 test2 test3 test4
 
 test1:
-	cp $(CPP_DIR)/LICENSE.encrypted-fa877845 LICENSE.tmp1.encrypted-fa877845
-	PHNX_PASSWORD=fourwordsalluppercase ./phnx LICENSE.tmp1.encrypted-fa877845
+	cp $(CPP_DIR)/LICENSE.encrypted-2c35a548 LICENSE.tmp1.encrypted-2c35a548
+	PHNX_PASSWORD=fourwordsalluppercase ./phnx LICENSE.tmp1.encrypted-2c35a548
 	@if diff -q $(CPP_DIR)/LICENSE LICENSE.tmp1; then \
 		echo "Test 1 PASSED"; \
 	else \
