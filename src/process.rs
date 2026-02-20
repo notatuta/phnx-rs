@@ -1,5 +1,5 @@
 use std::fs::{self, File, OpenOptions};
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::time::SystemTime;
 
 use crate::crc32c::Crc32c;
@@ -12,10 +12,10 @@ pub const PHNX_WRONG_PASSWORD: i32 = 2;
 pub const PHNX_UNCORRECTABLE_ERROR: i32 = 3;
 pub const PHNX_FORMAT_ERROR: i32 = 4;
 
-fn golay_read_and_decode(
+fn golay_read_and_decode<R: Read>(
     buffer: &mut [u8],
     bytes_to_read: usize,
-    slices: &mut [Option<File>; 8],
+    slices: &mut [Option<R>; 8],
     gc: &mut GolayCode,
 ) -> i32 {
     let mut block_offset = 0;
@@ -136,10 +136,10 @@ fn golay_read_and_decode(
     PHNX_OK
 }
 
-fn golay_encode_and_write(
+fn golay_encode_and_write<W: Write>(
     data: &[u8],
     data_size: usize,
-    slices: &mut [Option<File>; 8],
+    slices: &mut [Option<W>; 8],
     gc: &mut GolayCode,
 ) -> i32 {
     let mut block_offset = 0;
@@ -267,7 +267,8 @@ pub fn process_one_file(
     let mut nonce: u64 = 0;
     let mut golay_encode = !compatibility_mode;
     let mut golay_decode = false;
-    let mut slices: [Option<File>; 8] = [None, None, None, None, None, None, None, None];
+    let mut slices_r: [Option<BufReader<File>>; 8] = [None, None, None, None, None, None, None, None];
+    let mut slices_w: [Option<BufWriter<File>>; 8] = [None, None, None, None, None, None, None, None];
     let mut length: i64 = 0;
     let mut remaining_length: i64 = 0;
     let mut gc = GolayCode::new();
@@ -297,7 +298,7 @@ pub fn process_one_file(
                     slice_filename.as_bytes_mut()[last] = b'A' + i as u8;
                 }
                 match File::open(&slice_filename) {
-                    Ok(f) => slices[i] = Some(f),
+                    Ok(f) => slices_r[i] = Some(BufReader::new(f)),
                     Err(_) => {
                         eprintln!("Cannot open {}", slice_filename);
                         if missing_ct > 0 {
@@ -363,7 +364,7 @@ pub fn process_one_file(
     if golay_decode {
         // Read suffix (2 blocks = 48 bytes = 6 bytes per slice)
         for i in 0..8 {
-            if let Some(ref mut s) = slices[i] {
+            if let Some(ref mut s) = slices_r[i] {
                 if s.seek(SeekFrom::End(-6)).is_err() {
                     eprintln!("\nError seeking in slice {}", (b'A' + i as u8) as char);
                     return PHNX_IO_ERROR;
@@ -371,12 +372,12 @@ pub fn process_one_file(
             }
         }
         let mut suffix_bytes = [0u8; 24];
-        let ret = golay_read_and_decode(&mut suffix_bytes, 24, &mut slices, &mut gc);
+        let ret = golay_read_and_decode(&mut suffix_bytes, 24, &mut slices_r, &mut gc);
         if ret != PHNX_OK {
             return ret;
         }
         for i in 0..8 {
-            if let Some(ref mut s) = slices[i] {
+            if let Some(ref mut s) = slices_r[i] {
                 if s.seek(SeekFrom::Start(0)).is_err() {
                     return PHNX_IO_ERROR;
                 }
@@ -539,7 +540,7 @@ pub fn process_one_file(
             slice_filename.push_str(".phnx_");
             slice_filename.push((b'A' + i as u8) as char);
             match File::create(&slice_filename) {
-                Ok(file) => slices[i] = Some(file),
+                Ok(file) => slices_w[i] = Some(BufWriter::new(file)),
                 Err(_) => {
                     eprintln!("Cannot create {}", slice_filename);
                     return PHNX_IO_ERROR;
@@ -554,7 +555,7 @@ pub fn process_one_file(
 
         if golay_decode {
             let ret =
-                golay_read_and_decode(&mut buffer, chunk_size, &mut slices, &mut gc);
+                golay_read_and_decode(&mut buffer, chunk_size, &mut slices_r, &mut gc);
             if ret != PHNX_OK {
                 return ret;
             }
@@ -603,7 +604,7 @@ pub fn process_one_file(
 
         if golay_encode {
             let ret =
-                golay_encode_and_write(&buffer, chunk_size, &mut slices, &mut gc);
+                golay_encode_and_write(&buffer, chunk_size, &mut slices_w, &mut gc);
             if ret != PHNX_OK {
                 return ret;
             }
@@ -660,14 +661,14 @@ pub fn process_one_file(
         suffix_bytes[8..16].copy_from_slice(&suffix[1].to_le_bytes());
         suffix_bytes[16..24].copy_from_slice(&suffix[2].to_le_bytes());
 
-        let ret = golay_encode_and_write(&suffix_bytes, 24, &mut slices, &mut gc);
+        let ret = golay_encode_and_write(&suffix_bytes, 24, &mut slices_w, &mut gc);
         if ret != PHNX_OK {
             return ret;
         }
 
         // Close slices (drop them)
         for i in 0..8 {
-            slices[i] = None;
+            slices_w[i] = None;
         }
 
         return PHNX_OK;

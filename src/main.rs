@@ -6,7 +6,7 @@ mod speck;
 use std::env;
 use std::io::{self, BufRead, Write};
 
-const PHNX_VERSION: &str = "4.0";
+const PHNX_VERSION: &str = "4.0.1";
 const PHNX_SELF_TEST_FAILED: i32 = 5;
 
 fn main() {

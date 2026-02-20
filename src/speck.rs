@@ -74,12 +74,13 @@ pub fn speck_encrypt4(plaintext: &[u64; 8], schedule: &[u64; 34]) -> [u64; 8] {
 #[cfg(not(target_feature = "avx2"))]
 pub fn speck_encrypt4(plaintext: &[u64; 8], schedule: &[u64; 34]) -> [u64; 8] {
     let mut ct = *plaintext;
+    let (low, high) = ct.split_at_mut(4);
     for i in 0..34 {
         let si = schedule[i];
-        speck_round(&mut ct[4], &mut ct[0], si);
-        speck_round(&mut ct[5], &mut ct[1], si);
-        speck_round(&mut ct[6], &mut ct[2], si);
-        speck_round(&mut ct[7], &mut ct[3], si);
+        speck_round(&mut high[0], &mut low[0], si);
+        speck_round(&mut high[1], &mut low[1], si);
+        speck_round(&mut high[2], &mut low[2], si);
+        speck_round(&mut high[3], &mut low[3], si);
     }
     ct
 }
