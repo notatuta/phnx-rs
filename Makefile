@@ -1,5 +1,4 @@
 RUSTFLAGS = -C target-cpu=native
-CPP_DIR = ../phnx
 
 all: build
 
@@ -10,9 +9,9 @@ build:
 test: build test1 test2 test3 test4
 
 test1:
-	cp $(CPP_DIR)/LICENSE.encrypted-2c35a548 LICENSE.tmp1.encrypted-2c35a548
+	cp LICENSE.encrypted-2c35a548 LICENSE.tmp1.encrypted-2c35a548
 	PHNX_PASSWORD=fourwordsalluppercase ./phnx LICENSE.tmp1.encrypted-2c35a548
-	@if diff -q $(CPP_DIR)/LICENSE LICENSE.tmp1; then \
+	@if diff -q LICENSE LICENSE.tmp1; then \
 		echo "Test 1 PASSED"; \
 	else \
 		echo "Test 1 FAILED"; \
@@ -20,9 +19,9 @@ test1:
 	fi
 
 test2:
-	cp $(CPP_DIR)/LICENSE.encrypted LICENSE.tmp2.encrypted
+	cp LICENSE.encrypted LICENSE.tmp2.encrypted
 	PHNX_PASSWORD=fourwordsalluppercase ./phnx LICENSE.tmp2.encrypted
-	@if diff -q $(CPP_DIR)/LICENSE LICENSE.tmp2; then \
+	@if diff -q LICENSE LICENSE.tmp2; then \
 		echo "Test 2 PASSED"; \
 	else \
 		echo "Test 2 FAILED"; \
@@ -30,10 +29,10 @@ test2:
 	fi
 
 test3:
-	cp $(CPP_DIR)/LICENSE LICENSE.tmp3
+	cp LICENSE LICENSE.tmp3
 	PHNX_PASSWORD=fourwordsalluppercase ./phnx -c LICENSE.tmp3
 	PHNX_PASSWORD=fourwordsalluppercase ./phnx LICENSE.tmp3.encrypted
-	@if diff -q $(CPP_DIR)/LICENSE LICENSE.tmp3; then \
+	@if diff -q LICENSE LICENSE.tmp3; then \
 		echo "Test 3 PASSED"; \
 	else \
 		echo "Test 3 FAILED"; \
@@ -41,11 +40,11 @@ test3:
 	fi
 
 test4:
-	cp $(CPP_DIR)/LICENSE LICENSE.tmp4
+	cp LICENSE LICENSE.tmp4
 	PHNX_PASSWORD=fourwordsalluppercase ./phnx LICENSE.tmp4
 	rm LICENSE.tmp4.phnx_A LICENSE.tmp4
 	PHNX_PASSWORD=fourwordsalluppercase ./phnx LICENSE.tmp4.phnx_F
-	@if diff -q $(CPP_DIR)/LICENSE LICENSE.tmp4; then \
+	@if diff -q LICENSE LICENSE.tmp4; then \
 		echo "Test 4 PASSED"; \
 	else \
 		echo "Test 4 FAILED"; \
