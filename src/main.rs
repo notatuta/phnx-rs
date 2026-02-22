@@ -23,7 +23,7 @@ fn main() {
         }
 
         eprintln!(
-            "phnx version {}\n\n\
+            "phnx version {} (Rust)\n\n\
              Usage:\n\n\t{} [-c] file1 [-g] [file2] [...]\n\n\
              Encrypt a given file or files, add error correction bits, split into eight slices.\n\
              When given a slice, read all eight slices, correct errors if possible, then decrypt the original file.\n\
