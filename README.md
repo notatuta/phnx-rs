@@ -173,7 +173,3 @@ MIT license, see LICENSE.txt. Same as cryptolocker and golay components (see ind
 * Encryption/decryption: https://github.com/malobukov/cryptolocker.git
 * Golay error correction: https://github.com/notatuta/golay.git
 
-## Version
-
-4.0 - Initial release, following numbering scheme of cryptolocker
-4.01 - Corrected return code, ported to Rust
