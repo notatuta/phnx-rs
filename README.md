@@ -1,4 +1,4 @@
-# phnx - Encryption and Error Correction Tool
+# phnx - Encryption and Error Correction Tool [![Makefile CI](https://github.com/notatuta/phnx-rs/actions/workflows/makefile.yml/badge.svg)](https://github.com/notatuta/phnx-rs/actions/workflows/makefile.yml)
 
 phnx combines file encryption with error correction, splitting encrypted files into 8 pieces with built-in redundancy. The original file can be recovered even if one piece is missing, or some pieces are corrupted.
 
