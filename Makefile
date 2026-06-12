@@ -51,6 +51,9 @@ test4:
 		exit 1; \
 	fi
 
+install: build 
+	sudo install -m 0755 phnx /usr/local/bin/
+
 clean:
 	cargo clean
 	rm -f LICENSE.tmp* phnx

@@ -284,12 +284,8 @@ pub fn process_one_file(
 
     // Check for .phnx_[A-H]
     if p >= 6 {
-        let suffix_start = p - 6;
-        let suffix = &filename[suffix_start..];
-        if suffix.len() == 7
-            && suffix.starts_with(".phnx_")
-            && (b'A'..=b'H').contains(&suffix.as_bytes()[6])
-        {
+        let suffix = &fname_bytes[p - 6..];
+        if suffix.starts_with(b".phnx_") && (b'A'..=b'H').contains(&suffix[6]) {
             let mut missing_ct = 0;
             for i in 0..8 {
                 let mut slice_filename = filename.to_string();
@@ -375,6 +371,10 @@ pub fn process_one_file(
         let ret = golay_read_and_decode(&mut suffix_bytes, 24, &mut slices_r, &mut gc);
         if ret != PHNX_OK {
             return ret;
+        }
+        if gc.uncorrectable_codewords != 0 {
+            eprintln!("Uncorrectable errors in suffix");
+            return PHNX_UNCORRECTABLE_ERROR;
         }
         for i in 0..8 {
             if let Some(ref mut s) = slices_r[i] {
@@ -621,7 +621,7 @@ pub fn process_one_file(
         // Update progress bar
         let done = length - remaining_length;
         let notches_remaining =
-            total_notches - (done as u32 * total_notches / length as u32).min(total_notches);
+            total_notches - ((done * total_notches as i64 / length) as u32).min(total_notches);
         if total_notches - notches_shown > notches_remaining {
             let notches_to_show = total_notches - notches_shown - notches_remaining;
             for _ in 0..notches_to_show {
@@ -666,9 +666,14 @@ pub fn process_one_file(
             return ret;
         }
 
-        // Close slices (drop them)
+        // Flush and close slices; flush-on-drop would swallow write errors
         for i in 0..8 {
-            slices_w[i] = None;
+            if let Some(mut w) = slices_w[i].take() {
+                if w.flush().is_err() {
+                    eprintln!("\nError writing slice {}", (b'A' + i as u8) as char);
+                    return PHNX_IO_ERROR;
+                }
+            }
         }
 
         return PHNX_OK;
